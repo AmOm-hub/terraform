@@ -46,3 +46,4 @@ variable "tags" {
     expiration_date = "30-02-23"
   }
 }
+

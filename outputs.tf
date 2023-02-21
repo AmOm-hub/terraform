@@ -17,6 +17,5 @@ output "loadBalancer_DNS_name" {
 
 output "key_pair_ssh_to_ec2" {
   description = "key pair in order to ssh the ec2 instances"
-  value       = aws_lb.amit_ec2_lb.dns_name
+  value       = "amita-ec2-key.pem"
 }
-

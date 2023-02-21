@@ -29,6 +29,7 @@ module "ec2_instances" {
   vpc_security_group_ids = [aws_security_group.amit_ec2_sg.id]
   subnet_id              = module.vpc.public_subnets[0]
   key_name               = "amita-ec2-key"
+  user_data              = file("installdocker.sh")
   tags                   = var.tags
 }
 
