@@ -1,20 +1,15 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
-###AWS#########################################################################
-
-variable "aws_region" {
-  description = "region"
-  type        = string
-  default     = "us-west-2"
-}
-
-###VPC#########################################################################
+# Copyright Amit Asman
 
 variable "vpc_name" {
   description = "Name of VPC"
   type        = string
   default     = "amit-vpc"
+}
+
+variable "region" {
+  description = "Name of region"
+  type        = string
+  default     = "us-west-2"
 }
 
 variable "vpc_cidr" {
@@ -41,35 +36,13 @@ variable "vpc_enable_nat_gateway" {
   default     = true
 }
 
-###EC2#########################################################################
-
-variable "ec2_ami" {
-  description = "ami that is used in EC2"
-  type        = string
-  default     = "ami-0c5204531f799e0c6"
-}
-
-variable "ec2_instance_type" {
-  description = "instance type"
-  type        = string
-  default     = "t3a.micro"
-}
-
-variable "ec2_count" {
-  description = "number of instances"
-  type        = number
-  default     = 2
-}
-
-###TAGS########################################################################
-
 variable "tags" {
-  description = "Tags to apply to resources"
+  description = "Tags to apply to resources created by VPC module"
   type        = map(string)
   default = {
     Name            = "amit"
     Owner           = "amit"
-    bootcamp        = "int_bootcamp"
+    bootcamp        = "int"
     expiration_date = "30-02-23"
   }
 }

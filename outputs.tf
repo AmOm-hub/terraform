@@ -1,7 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
-# Output variable definitions
+# Copyright Amit Asman
 
 output "vpc_public_subnets" {
   description = "IDs of the VPC's public subnets"
@@ -13,17 +10,13 @@ output "ec2_instance_public_ips" {
   value       = module.ec2_instances[*].public_ip
 }
 
-output "website_bucket_arn" {
-  description = "ARN of the bucket"
-  value       = module.website_s3_bucket.arn
+output "loadBalancer_DNS_name" {
+  description = "DNS loadBalancer"
+  value       = aws_lb.amit_ec2_lb.dns_name
 }
 
-output "website_bucket_name" {
-  description = "Name (id) of the bucket"
-  value       = module.website_s3_bucket.name
+output "key_pair_ssh_to_ec2" {
+  description = "key pair in order to ssh the ec2 instances"
+  value       = aws_lb.amit_ec2_lb.dns_name
 }
 
-output "website_bucket_domain" {
-  description = "Domain name of the bucket"
-  value       = module.website_s3_bucket.domain
-}

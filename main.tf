@@ -1,17 +1,10 @@
-# Copyright Amit
-
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "4.49.0"
-    }
-  }
-}
+# Copyright Amit Asman
 
 provider "aws" {
-  region = var.aws_region
+  region = var.region
 }
+
+###VPC###
 
 module "vpc" {
   source             = "terraform-aws-modules/vpc/aws"
@@ -24,23 +17,75 @@ module "vpc" {
   tags               = var.tags
 }
 
+###EC2###
+
 module "ec2_instances" {
   source                 = "terraform-aws-modules/ec2-instance/aws"
   version                = "4.3.0"
-  count                  = var.ec2_count
-  name                   = "amit-ec2-${count.index}"
-  ami                    = var.ec2_ami
-  instance_type          = var.ec2_instance_type
-  vpc_security_group_ids = [module.vpc.default_security_group_id]
+  count                  = 2
+  name                   = "my-ec2-cluster"
+  ami                    = "ami-0c5204531f799e0c6"
+  instance_type          = "t3a.micro"
+  vpc_security_group_ids = [aws_security_group.amit_ec2_sg.id]
   subnet_id              = module.vpc.public_subnets[0]
+  key_name               = "amita-ec2-key"
   tags                   = var.tags
 }
 
-module "website_s3_bucket" {
-  source      = "./modules/aws-s3-static-website-bucket"
-  bucket_name = "amit-test-21.02.2023"
-  tags        = var.tags
+###security group ec2###
+
+resource "aws_security_group" "amit_ec2_sg" {
+  name_prefix = "amit_ec2-sg"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["213.57.119.247/32"]
+  }
+
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.amit_lb_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = var.tags
 }
+
+###security group loadbalancer###
+
+resource "aws_security_group" "amit_lb_sg" {
+  name_prefix = "amit_lb-sg"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = var.tags
+}
+
+###LOAD BALANCER###
 
 resource "aws_lb" "amit_ec2_lb" {
   name               = "amit-ec2-lb"
@@ -57,8 +102,7 @@ resource "aws_lb_target_group" "amit_ec2_tg" {
   protocol    = "HTTP"
   target_type = "instance"
   vpc_id      = module.vpc.vpc_id
-
-  tags = var.tags
+  tags        = var.tags
 }
 
 resource "aws_lb_listener" "amit_ec2_listener" {
@@ -72,53 +116,9 @@ resource "aws_lb_listener" "amit_ec2_listener" {
   }
 }
 
-resource "aws_security_group" "amit_ec2_sg" {
-  name_prefix = "amit_ec2-sg"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port       = 80
-    to_port         = 3000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.amit_lb_sg.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = var.tags
+resource "aws_lb_target_group_attachment" "test" {
+  count            = 2
+  target_group_arn = aws_lb_target_group.amit_ec2_tg.arn
+  target_id        = module.ec2_instances[count.index].id
+  port             = 80
 }
-
-resource "aws_security_group" "amit_lb_sg" {
-  name_prefix = "amit_lb-sg"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    from_port   = 0
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = var.tags
-}
-
-
